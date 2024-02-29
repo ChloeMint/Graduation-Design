@@ -13,12 +13,13 @@ jwt = JWTManager(app)
 sdk = SmsSDK("2c94811c8cd4da0a018df3b5eebe2aad", "e076a8ae3883418185c930633e80efc2", "2c94811c8cd4da0a018df3b5f0412ab4")
 
 
-def create_response(status, msg, code=200, data=None):  # 封装响应信息
+def create_response(status, msg, code=200, data=[]):  # 封装响应信息
     response = {
         "status": status,
         "code": code,
         "msg": msg,
         "data": data,
+        "count": len(data)
     }
     return response
 
@@ -111,10 +112,31 @@ def register_user():
                     user.set_password(arg["password"])
                     db.session.add(user)
                     db.session.commit()
-                    session.pop(arg["phone"], None)     # 注册成功后清除验证码
+                    session.pop(arg["phone"], None)  # 注册成功后清除验证码
                     return jsonify(create_response("success", "注册用户成功"))
 
         else:
             return jsonify(create_response("failed", "缺少必要参数", 400))
+    except Exception as e:
+        return jsonify(create_response("error", str(e), 500))
+
+
+@app.route("/forgetPassword", methods=["POST"])
+def forget_password():
+    try:
+        account = request.json["account"]
+        phone = request.json["phone"]
+        password = request.json["password"]
+
+        if account == "" or phone == "" or password == "":
+            return jsonify(create_response("failed", "缺少必要参数", 400))
+
+        users = db.session.query(User).filter(User.account == account, User.phone == phone).all()
+        if len(users) != 0:
+            users[0].set_password(password)
+            db.session.commit()
+            return jsonify(create_response("ok", "密码修改成功"))
+        else:
+            return jsonify(create_response("failed", "没有对应的账号信息，请重新输入", 400))
     except Exception as e:
         return jsonify(create_response("error", str(e), 500))
