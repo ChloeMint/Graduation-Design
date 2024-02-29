@@ -29,12 +29,14 @@ def get_verification_code():  # 生成验证码
 
 @app.route("/sendMessage", methods=["POST"])  # 发送验证码
 def send_sms():
-    code = get_verification_code()
-    username = request.json["username"] + "code"
-    phone = request.json["phone"]
-    session[username] = code
-    sdk.sendMessage("1", phone, (code, 5))
-    return jsonify(create_response("ok", "短信发送成功"))
+    try:
+        code = get_verification_code()
+        phone = request.json["phone"]
+        session[phone] = code
+        sdk.sendMessage("1", phone, (code, 5))
+        return jsonify(create_response("ok", "短信发送成功"))
+    except Exception as e:
+        return jsonify(create_response("error", str(e), 500))
 
 
 @app.route("/users")  # 获取所有用户
@@ -81,7 +83,8 @@ def login():
 def register_user():
     try:
         arg = request.json
-        if arg["account"] != "" and arg["password"] != "" and arg["username"] != "" and arg["phone"] != "" and arg["code"] != "":
+        if arg["account"] != "" and arg["password"] != "" and arg["username"] != "" and arg["phone"] != "" and arg[
+            "code"] != "":
 
             if 4 > len(arg["account"]) or len(arg["account"]) > 8:
                 return jsonify(create_response("failed", "账号长度必须要为4~8位", 400))
@@ -95,7 +98,7 @@ def register_user():
                 res = db.session.query(User).filter(User.account == arg["account"]).all()
                 if len(res) != 0:
                     return jsonify(create_response("failed", "账号名称已存在", 400))
-                elif session[(arg["username"] + "code")] != arg["code"]:
+                elif session[arg["phone"]] != arg["code"]:
                     return jsonify(create_response("failed", "验证码错误", 400))
                 else:
                     user = User(
