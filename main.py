@@ -32,6 +32,8 @@ def send_sms():
     try:
         code = get_verification_code()
         phone = request.json["phone"]
+        if phone == "":
+            return jsonify(create_response("failed", "您需要输入手机号才能获得验证码", 400))
         session[phone] = code
         sdk.sendMessage("1", phone, (code, 5))
         return jsonify(create_response("ok", "短信发送成功"))
@@ -79,7 +81,7 @@ def login():
         return jsonify(create_response("error", str(e), 500))
 
 
-@app.route("/register", methods=["POST"])  # 注册用户
+@app.route("/register", methods=["POST"])  # 注册用户,但是没有做定时清除验证码的操作
 def register_user():
     try:
         arg = request.json
@@ -109,6 +111,7 @@ def register_user():
                     user.set_password(arg["password"])
                     db.session.add(user)
                     db.session.commit()
+                    session.pop(arg["phone"], None)     # 注册成功后清除验证码
                     return jsonify(create_response("success", "注册用户成功"))
 
         else:
