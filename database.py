@@ -19,7 +19,7 @@ class User(db.Model):
     account = db.Column(db.String(40), nullable=False, unique=True)  # 账号,唯一
     password_hash = db.Column(db.String(128), nullable=False)  # 密码
     username = db.Column(db.String(40), nullable=False)  # 用户名称
-    phone = db.Column(db.String(20), nullable=False)  # 用户手机号
+    phone = db.Column(db.String(20), nullable=False)    # 用户手机号
     avatar = db.Column(db.String(255))  # 用户头像
     notes = db.relationship('Note', backref='user')
 
@@ -37,7 +37,7 @@ class User(db.Model):
             'account': self.account,
             'username': self.username,
             'avatar': self.avatar,
-            'phone': self.phone,
+            'phone' : self.phone,
             'notes': [note.to_dict() for note in self.notes]
         }
 
