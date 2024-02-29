@@ -68,8 +68,9 @@ def register_user():
                 return jsonify(create_response("failed", "密码长度必须要为10~16位", 400))
             elif 1 > len(arg["username"]) or len(arg["username"]) > 10:
                 return jsonify(create_response("failed", "用户名长度必须为1~10位", 400))
+            elif len(arg["phone"]) != 11:
+                return jsonify(create_response("failed", "手机号码长度必须是11位", 400))
             else:
-
                 res = db.session.query(User).filter(User.account == arg["account"]).all()
                 if len(res) != 0:
                     return jsonify(create_response("failed", "账号名称已存在", 400))
@@ -77,6 +78,7 @@ def register_user():
                     user = User(
                         account=arg["account"],
                         username=arg["username"],
+                        phone=arg["phone"]
                     )
                     user.set_password(arg["password"])
                     db.session.add(user)
