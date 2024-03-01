@@ -36,7 +36,8 @@ def send_sms():
         if phone == "":
             return jsonify(create_response("failed", "您需要输入手机号才能获得验证码", 400))
         session[phone] = code
-        sdk.sendMessage("1", phone, (code, 5))
+        # sdk.sendMessage("1", phone, (code, 5))    # 之后需要解开注释，才能将验证码发到手机上
+        print(f"验证码：{code}")
         return jsonify(create_response("ok", "短信发送成功"))
     except Exception as e:
         return jsonify(create_response("error", str(e), 500))
@@ -121,22 +122,27 @@ def register_user():
         return jsonify(create_response("error", str(e), 500))
 
 
-@app.route("/forgetPassword", methods=["POST"])
+@app.route("/forgetPassword", methods=["POST"])     # 忘记密码
 def forget_password():
     try:
         account = request.json["account"]
         phone = request.json["phone"]
         password = request.json["password"]
+        code = request.json["code"]
 
-        if account == "" or phone == "" or password == "":
+        if account == "" or phone == "" or password == "" or code == "":
             return jsonify(create_response("failed", "缺少必要参数", 400))
 
-        users = db.session.query(User).filter(User.account == account, User.phone == phone).all()
-        if len(users) != 0:
-            users[0].set_password(password)
-            db.session.commit()
-            return jsonify(create_response("ok", "密码修改成功"))
+        if session[phone] == code:
+            users = db.session.query(User).filter(User.account == account, User.phone == phone).all()
+            if len(users) != 0:
+                users[0].set_password(password)
+                db.session.commit()
+                session.pop(phone, None)
+                return jsonify(create_response("ok", "密码修改成功"))
+            else:
+                return jsonify(create_response("failed", "没有对应的账号信息，请重新输入", 400))
         else:
-            return jsonify(create_response("failed", "没有对应的账号信息，请重新输入", 400))
+            return jsonify(create_response("failed", "验证码错误", 400))
     except Exception as e:
         return jsonify(create_response("error", str(e), 500))
