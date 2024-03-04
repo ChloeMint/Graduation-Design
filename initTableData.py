@@ -2,7 +2,7 @@ from database import *
 
 with app.app_context():
     # 添加一个账号
-    user = User(account="user01", username="芽芽", phone="15715815825", avatar="/image/yaya.jpg")
+    user = User(phone="15715815825", username="芽芽", avatar="/image/yaya.jpg")
     user.set_password("123456")
 
     db.session.add(user)
