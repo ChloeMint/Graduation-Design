@@ -21,6 +21,7 @@ class User(db.Model):
     username = db.Column(db.String(40), nullable=False)  # 用户名称
     avatar = db.Column(db.String(255), default="/image/default_avatar.png")  # 用户头像
     notes = db.relationship('Note', backref='user')
+    dongtai = db.relationship('DongTai', backref='user')
 
     def set_password(self, password):
         """Sets the password field to the hashed password."""
@@ -36,7 +37,8 @@ class User(db.Model):
             'phone': self.phone,
             'username': self.username,
             'avatar': self.avatar,
-            'notes': [note.to_dict() for note in self.notes]
+            'notes': [note.to_dict() for note in self.notes],
+            'dongtai': [dongtai.to_dict() for dongtai in self.dongtai]
         }
 
 
