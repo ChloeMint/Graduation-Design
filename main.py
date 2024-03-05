@@ -15,8 +15,7 @@ app.secret_key = "meaning"  # 配置session密钥
 jwt = JWTManager(app)
 # sdk = SmsSDK("ACCOUNT SID","AUTHTOKEN","APPID")
 sdk = SmsSDK("2c94811c8cd4da0a018df3b5eebe2aad", "e076a8ae3883418185c930633e80efc2", "2c94811c8cd4da0a018df3b5f0412ab4")
-app.config['UPLOAD_FOLDER'] = 'image'   # 配置上传文件的文件夹,只有这样的相对路径可以识别
-
+app.config['UPLOAD_FOLDER'] = 'image'  # 配置上传文件的文件夹,只有这样的相对路径可以识别
 
 # 确保上传文件夹存在
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -38,6 +37,7 @@ def get_verification_code():  # 生成验证码
     return "".join(random.choices("0123456789", k=4))
 
 
+# 用户相关接口
 @app.route("/sendMessage", methods=["POST"])  # 发送验证码
 def send_sms():
     try:
@@ -230,7 +230,7 @@ def change_phone_number():
         return jsonify(create_response("error", str(e), 500))
 
 
-@app.route("/user/changePassword", methods=["POST"])    # 修改账号的密码
+@app.route("/user/changePassword", methods=["POST"])  # 修改账号的密码
 @jwt_required()
 def change_password():
     try:
@@ -252,7 +252,7 @@ def change_password():
         return jsonify(create_response("error", str(e), 500))
 
 
-@app.route("/user/changeUsername", methods=["POST"])
+@app.route("/user/changeUsername", methods=["POST"])  # 修改用户名
 @jwt_required()
 def change_username():
     try:
@@ -288,16 +288,23 @@ def change_avatar():
 
         if file:
             # 使用secure_filename确保文件名安全
-            filename = secure_filename(file.filename)
-
-            # 保存文件到UPLOAD_FOLDER指定的文件夹
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # filename = secure_filename(file.filename)
+            end_type = file.filename.split(".")[-1]
 
             # 更新数据库中的头像路径
             user_id = get_jwt_identity()
             user = db.session.query(User).filter(User.id == user_id).first()
-            user.avatar = os.path.join('/image', filename)
+
+            # 保存文件到UPLOAD_FOLDER指定的文件夹
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], user.username + "." + end_type))
+            user.avatar = os.path.join('/image', user.username + "." + end_type)  # 这行代码实际上是为了改变刚注册时的默认头像
             db.session.commit()
             return jsonify(create_response("success", "上传成功"))
     except Exception as e:
         return jsonify(create_response("error", str(e), 500))
+
+
+# 植物百科相关接口
+@app.route("/baike")
+def get_all_baike():
+    return ""
