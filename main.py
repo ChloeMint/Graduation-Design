@@ -2,6 +2,7 @@ import random
 from datetime import timedelta
 
 from ronglian_sms_sdk import SmsSDK
+from sqlalchemy import or_
 
 from database import *
 from flask import send_from_directory, request, session
@@ -166,7 +167,7 @@ def register_user():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/forgetPassword", methods=["POST"])  # 忘记密码
+@app.route("/forgetPassword", methods=["POST", "PUT"])  # 忘记密码
 def forget_password():
     try:
         if "phone" not in request.json:
@@ -216,7 +217,7 @@ def get_personal_info():
     return jsonify(create_simple_response("ok", "获取成功", data=user.to_dict()))
 
 
-@app.route("/user/changePhoneNumber", methods=["POST"])  # 修改手机号
+@app.route("/user/changePhoneNumber", methods=["POST", "PUT"])  # 修改手机号
 @jwt_required()
 def change_phone_number():
     try:
@@ -251,7 +252,7 @@ def change_phone_number():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/user/changePassword", methods=["POST"])  # 修改账号的密码
+@app.route("/user/changePassword", methods=["POST", "PUT"])  # 修改账号的密码
 @jwt_required()
 def change_password():
     try:
@@ -273,7 +274,7 @@ def change_password():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/user/changeUsername", methods=["POST"])  # 修改用户名
+@app.route("/user/changeUsername", methods=["POST", "PUT"])  # 修改用户名
 @jwt_required()
 def change_username():
     try:
@@ -295,7 +296,7 @@ def change_username():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/user/changeAvatar", methods=["POST"])  # 上传并修改用户头像
+@app.route("/user/changeAvatar", methods=["POST", "PUT"])  # 上传并修改用户头像
 @jwt_required()
 def change_avatar():
     try:
@@ -326,7 +327,7 @@ def change_avatar():
 
 
 # 植物百科相关接口
-@app.route("/baike")    # 获取百科列表
+@app.route("/baike")  # 获取百科列表
 def get_all_baike():
     try:
         page = request.args.get("page", 1)  # 获取page页的数据，默认为第一页
@@ -341,23 +342,39 @@ def get_all_baike():
         #     'per_page': pagination.per_page
         # }
         res = create_list_response("success", "获取列表成功", data=data)
-        res["pagination_info"] = get_pagination_info(pagination.page, pagination.pages, pagination.total, pagination.per_page)
+        res["pagination_info"] = get_pagination_info(pagination.page, pagination.pages, pagination.total,
+                                                     pagination.per_page)
         return jsonify(res)
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/baike/<int:baike_id>")     # 获取百科详细信息
+@app.route("/baike/<int:baike_id>")  # 获取百科详细信息
 def get_baike_detail(baike_id):
     try:
         baike = Baike.query.filter(Baike.id == baike_id).first()
+        if baike is None:
+            return jsonify(create_simple_response("failed", "没有该百科的信息", 400))
         return jsonify(create_simple_response("success", "获取详细信息成功", data=baike.to_dict()))
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))
 
 
+@app.route("/baike/<name>")     # 搜索植物名字，展示对应百科
+def search_baike_name(name):
+    try:
+        baikes = db.session.query(Baike).filter(
+            or_(Baike.plant_name.like(f'%{name}%'), Baike.plant_english_name.like(f"%{name}%"))).all()
+        if len(baikes) == 0:
+            return jsonify(create_simple_response("failed", "未找到该植物信息", 400))
+        data = [baike.to_dict() for baike in baikes]
+        return jsonify(create_list_response("success", "搜索成功", data=data))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
 # 动态表相关接口
-@app.route("/dongtais")     # 获取所有动态
+@app.route("/dongtais")  # 获取所有动态
 def get_all_dongtai():
     try:
         page = request.args.get("page", 1)  # 获取page页的数据，默认为第一页
@@ -365,6 +382,7 @@ def get_all_dongtai():
         pagination = DongTai.query.paginate(page=int(page), per_page=int(size), error_out=False)
         dongtais = pagination.items
         data = [dongtai.to_dict() for dongtai in dongtais]
+        # data.sort(DongTai.publish_time)
         res = create_list_response("success", "获取动态列表成功", data=data)
         res["pagination"] = get_pagination_info(pagination.page, pagination.pages, pagination.total,
                                                 pagination.per_page)
@@ -373,3 +391,32 @@ def get_all_dongtai():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
+@app.route("/dongtais/<int:dongtai_id>")  # 获取动态详情
+def get_dongtai_detail(dongtai_id):
+    try:
+        dongtai = DongTai.query.filter(DongTai.id == dongtai_id).first()
+        if dongtai is None:
+            return jsonify(create_simple_response("failed", "没有该动态的信息", 400))
+        return jsonify(create_simple_response("success", "获取动态详情成功", data=dongtai.to_dict()))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/dongtai/delete/<int:dongtai_id>", methods=["DELETE"])  # 删除用户自己的动态
+@jwt_required()
+def delete_dongtai(dongtai_id):
+    try:
+        current_user_id = get_jwt_identity()
+        dongtai = db.session.query(DongTai).filter(DongTai.id == dongtai_id).first()
+
+        if dongtai is None:
+            return jsonify(create_simple_response("failed", "该动态不存在", 400))
+
+        if dongtai.user_id != current_user_id:
+            return jsonify(create_simple_response("failed", "您无权删除该条评论,只有发布用户可以删除", 400))
+        else:
+            db.session.query(DongTai).filter(DongTai.id == dongtai_id).delete()
+            db.session.commit()
+            return jsonify(create_simple_response("success", "动态删除成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
