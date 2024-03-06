@@ -84,7 +84,7 @@ class DongTai(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     publish_time = db.Column(DateTime, default=datetime.utcnow)  # 发布时间
-    like_num = db.Column(db.Integer, nullable=False)  # 点赞数
+    like_num = db.Column(db.Integer, nullable=False, default=0)  # 点赞数
     article_text = db.Column(db.Text)  # 文章内容
     imageList = db.Column(db.Text)  # 用于存储json字符串
     comments = db.relationship('Comment', backref='dongtai')  # 链接评论

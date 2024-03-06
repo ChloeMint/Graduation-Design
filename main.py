@@ -360,7 +360,7 @@ def get_baike_detail(baike_id):
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/baike/<name>")     # 搜索植物名字，展示对应百科
+@app.route("/baike/<name>")  # 搜索植物名字，展示对应百科
 def search_baike_name(name):
     try:
         baikes = db.session.query(Baike).filter(
@@ -420,3 +420,57 @@ def delete_dongtai(dongtai_id):
             return jsonify(create_simple_response("success", "动态删除成功"))
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/dongtai/publish", methods=["POST"])  # 发布动态
+@jwt_required()
+def publish_dongtai():
+    if 'text' not in request.form and 'files' not in request.files:  # 判断文字和图片都不存在这种情况
+        return jsonify(create_simple_response("failed", "您没有输入任何数据", 400))
+    else:
+        current_user_id = get_jwt_identity()
+        dongtai = DongTai(
+            user_id=current_user_id
+        )
+        if 'text' not in request.form:
+            files = request.files.getlist("files")  # 获取请求提交参数都为files参数key的文件，并将其转成列表
+            for file in files:
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                dongtai.add_image(os.path.join("/image", filename))
+        elif 'text' in request.form and 'files' not in request.files:
+            dongtai.article_text = request.form.get("text")
+        else:
+            dongtai.article_text = request.form.get("text")
+            files = request.files.getlist("files")
+            for file in files:
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                dongtai.add_image(os.path.join("/image", filename))
+        db.session.add(dongtai)
+        db.session.commit()
+        return jsonify(create_simple_response("success", "上传文件成功"))
+
+
+@app.route("/dongtai/like/<int:dongtai_id>")    # 点赞和取消点赞
+@jwt_required()
+def like(dongtai_id):
+    dongtai = DongTai.query.filter(DongTai.id == dongtai_id).first()
+    if dongtai is None:
+        return jsonify(create_simple_response("failed", "该动态不存在", 400))
+    current_user_id = get_jwt_identity()
+    li = Like.query.filter(Like.article_id == dongtai_id).first()
+    if li is None:
+        like = Like(
+            user_id=current_user_id,
+            article_id=dongtai_id
+        )
+        db.session.add(like)
+        db.session.commit()
+        return jsonify(create_simple_response("success", "点赞成功"))
+    else:
+        Like.query.filter(Like.article_id == dongtai_id).delete()
+        db.session.commit()
+        return jsonify(create_simple_response("failed", "取消点赞成功", 400))
+
+
