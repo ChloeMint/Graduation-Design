@@ -37,8 +37,8 @@ class User(db.Model):
             'phone': self.phone,
             'username': self.username,
             'avatar': self.avatar,
-            'notes': [note.to_dict() for note in self.notes],
-            'dongtai': [dongtai.to_dict() for dongtai in self.dongtai]
+            # 'notes': [note.to_dict() for note in self.notes],
+            # 'dongtai': [dongtai.to_dict() for dongtai in self.dongtai]
         }
 
 
@@ -56,19 +56,21 @@ class Baike(db.Model):
 
     def add_image(self, image_url):
         if not self.imageList:
-            self.imageList = json.dumps([image_url])
+            self.imageList = json.dumps([image_url])  # 列表转字符串'["1.jpg"]'
         else:
             self.imageList = json.dumps(json.loads(self.imageList) + [image_url])
 
     def get_images(self):
-        return json.loads(self.imageList) if self.imageList else []
+        return json.loads(
+            self.imageList) if self.imageList else []  # 字符串转字符串列表["1.jpg"],为了保证取出来的类型还是字符串数组，需要在to_dict()中使用该方法
 
     def to_dict(self):
         return {
             'id': self.id,
             'plant_name': self.plant_name,
             'plant_english_name': self.plant_english_name,
-            'imageList': self.imageList,
+            'imageList': self.get_images(),
+            # 这里本来是直接用self.imageList但是不知道为什么明明存进去是不带\的一个数组图片url，但是在获得数据的时候每张图片的url前面都会有[\image.jpg\]这种奇怪的现象
             'introduction': self.introduction,
             'care_knowledge': self.care_knowledge,
             'area': self.area,
@@ -82,7 +84,6 @@ class DongTai(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     publish_time = db.Column(DateTime, default=datetime.utcnow)  # 发布时间
-    like = db.Column(db.Enum("True", "False"), nullable=False, default="False")  # 点赞（喜欢）
     like_num = db.Column(db.Integer, nullable=False)  # 点赞数
     article_text = db.Column(db.Text)  # 文章内容
     imageList = db.Column(db.Text)  # 用于存储json字符串
@@ -102,10 +103,9 @@ class DongTai(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'publish_time': self.publish_time,
-            'like': self.like,
             'like_num': self.like_num,
             'article_text': self.article_text,
-            'imageList': self.imageList,
+            'imageList': self.get_images(),
             'comments': [comment.to_dict() for comment in self.comments]
         }
 
@@ -139,6 +139,21 @@ class Note(db.Model):
             'user_id': self.user_id,
             'title': self.title,
             'content': self.content
+        }
+
+
+class Like(db.Model):   # 所有用户点赞表
+    __tablename__ = "like"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('dongtai.id'), nullable=False)
+    dongtai = db.relationship('DongTai', backref='like')  # 链接动态
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'article_id': self.article_id
         }
 
 
