@@ -374,7 +374,7 @@ def search_baike_name(name):
 
 
 # 动态表相关接口
-@app.route("/dongtais")  # 获取所有动态
+@app.route("/dongtai")  # 获取所有动态
 def get_all_dongtai():
     try:
         page = request.args.get("page", 1)  # 获取page页的数据，默认为第一页
@@ -391,7 +391,7 @@ def get_all_dongtai():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/dongtais/<int:dongtai_id>")  # 获取动态详情
+@app.route("/dongtai/<int:dongtai_id>")  # 获取动态详情
 def get_dongtai_detail(dongtai_id):
     try:
         dongtai = DongTai.query.filter(DongTai.id == dongtai_id).first()
@@ -452,25 +452,149 @@ def publish_dongtai():
         return jsonify(create_simple_response("success", "上传文件成功"))
 
 
-@app.route("/dongtai/like/<int:dongtai_id>")    # 点赞和取消点赞
+@app.route("/dongtai/like/<int:dongtai_id>")  # 点赞和取消点赞,动态的喜欢数量也随之会变化
 @jwt_required()
 def like(dongtai_id):
-    dongtai = DongTai.query.filter(DongTai.id == dongtai_id).first()
-    if dongtai is None:
-        return jsonify(create_simple_response("failed", "该动态不存在", 400))
-    current_user_id = get_jwt_identity()
-    li = Like.query.filter(Like.article_id == dongtai_id).first()
-    if li is None:
-        like = Like(
-            user_id=current_user_id,
-            article_id=dongtai_id
+    try:
+        dongtai = DongTai.query.filter(DongTai.id == dongtai_id).first()
+        if dongtai is None:
+            return jsonify(create_simple_response("failed", "该动态不存在", 400))
+        current_user_id = get_jwt_identity()
+        li = Like.query.filter(Like.article_id == dongtai_id).first()
+        if li is None:
+            like = Like(
+                user_id=current_user_id,
+                article_id=dongtai_id
+            )
+            db.session.add(like)
+            dongtai.like_num += 1
+            db.session.commit()
+            return jsonify(create_simple_response("success", "点赞成功"))
+        else:
+            Like.query.filter(Like.article_id == dongtai_id).delete()
+            dongtai.like_num -= 1
+            db.session.commit()
+            return jsonify(create_simple_response("failed", "取消点赞成功", 400))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/comment/publish/<int:dongtai_id>", methods=["POST"])  # 发布评论
+@jwt_required()
+def publish_comment(dongtai_id):
+    try:
+        if "text" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少文本参数", 400))
+        comment_text = request.json["text"]
+        if comment_text == "":
+            return jsonify(create_simple_response("failed", "您没有输入任何内容", 400))
+        current_user_id = get_jwt_identity()
+        comment = Comment(
+            article_id=dongtai_id,
+            comment_user_id=current_user_id,
+            comment_text=comment_text
         )
-        db.session.add(like)
+        db.session.add(comment)
         db.session.commit()
-        return jsonify(create_simple_response("success", "点赞成功"))
-    else:
-        Like.query.filter(Like.article_id == dongtai_id).delete()
+        return jsonify(create_simple_response("success", "添加评论成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/note")  # 获取所有自己的笔记
+@jwt_required()
+def get_all_note():
+    try:
+        current_user_id = get_jwt_identity()
+        notes = Note.query.filter(Note.user_id == current_user_id).all()
+        data = [note.to_dict() for note in notes]
+        return jsonify(create_list_response("success", "获取笔记列表成功", data=data))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/note/<int:note_id>")  # 获取笔记详细信息
+@jwt_required()
+def get_note_detail(note_id):
+    try:
+        note = Note.query.filter(Note.id == note_id).first()
+        if note is None:
+            return jsonify(create_simple_response("failed", "该笔记不存在", 400))
+        current_user_id = get_jwt_identity()
+        if note.user_id != current_user_id:
+            return jsonify(create_simple_response("failed", "只有该笔记的发布者可以查看该笔记", 400))
+        return jsonify(create_simple_response("success", "获取笔记成功", data=note.to_dict()))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/note/createNote", methods=["POST"])
+@jwt_required()
+def create_note():
+    try:
+        if "title" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少标题参数", 400))
+        if "content" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少内容参数", 400))
+        title = request.json["title"]
+        content = request.json["content"]
+        if title == "" or content == "":
+            return jsonify(create_simple_response("failed", "标题或内容为空", 400))
+        else:
+            current_user_id = get_jwt_identity()
+            note = Note(
+                user_id=current_user_id,
+                title=title,
+                content=content
+            )
+            db.session.add(note)
+            db.session.commit()
+            return jsonify(create_simple_response("success", "新建笔记成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/note/editing/<int:note_id>", methods=["POST", "PUT"])
+@jwt_required()
+def editing_note(note_id):
+    try:
+        note = Note.query.filter(Note.id == note_id).first()
+        if note is None:
+            return jsonify(create_simple_response("failed", "该笔记不存在", 400))
+        current_user_id = get_jwt_identity()
+        if note.user_id != current_user_id:
+            return jsonify(create_simple_response("failed", "只有该笔记的发布者可以编辑", 400))
+        if "title" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少标题参数", 400))
+        if "content" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少内容参数", 400))
+        title = request.json["title"]
+        content = request.json["content"]
+        if title == "":
+            return jsonify(create_simple_response("failed", "标题不能为空", 400))
+        note.title = title
+        note.content = content
         db.session.commit()
-        return jsonify(create_simple_response("failed", "取消点赞成功", 400))
+        return jsonify(create_simple_response("success", "笔记修改成功", 400))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/note/delete/<int:note_id>", methods=["DELETE"])
+@jwt_required()
+def delete_note(note_id):
+    try:
+        note = Note.query.filter(Note.id == note_id).first()
+        if note is None:
+            return jsonify(create_simple_response("failed", "该笔记不存在", 400))
+        current_user_id = get_jwt_identity()
+        if note.user_id != current_user_id:
+            return jsonify(create_simple_response("failed", "只有笔记的发布者可以删除", 400))
+        else:
+            Note.query.filter(Note.id == note_id).delete()
+            db.session.commit()
+            return jsonify(create_simple_response("success", "删除笔记成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
 
 

@@ -131,7 +131,7 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(20), nullable=False)
-    content = db.Column(db.Text, nullable=False)
+    content = db.Column(db.Text)
 
     def to_dict(self):
         return {
@@ -147,7 +147,7 @@ class Like(db.Model):   # 所有用户点赞表
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey('dongtai.id'), nullable=False)
-    dongtai = db.relationship('DongTai', backref='like')  # 链接动态
+    # dongtai = db.relationship('DongTai', backref='like')  # 链接动态
 
     def to_dict(self):
         return {
