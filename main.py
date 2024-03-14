@@ -70,7 +70,17 @@ def send_sms():
             return jsonify(create_simple_response("failed", "您需要输入手机号才能获得验证码", 400))
         if len(phone) != 11:
             return jsonify(create_simple_response("failed", "手机号码必须为11位", 400))
+
         session[phone] = code
+        phone_code = db.session.query(Code).filter(Code.phone == phone).first()
+        if phone_code is None:
+            new_phone_code = Code(phone=phone, code=code)
+            db.session.add(new_phone_code)
+            db.session.commit()
+        else:
+            phone_code.code = code
+            db.session.commit()
+
         # sdk.sendMessage("1", phone, (code, 5))    # 之后需要解开注释，才能将验证码发到手机上
         print(f"验证码：{code}")
         return jsonify(create_simple_response("ok", "短信发送成功"))
@@ -147,9 +157,12 @@ def register_user():
                 return jsonify(create_simple_response("failed", "用户名长度必须为1~10位", 400))
             else:
                 res = db.session.query(User).filter(User.phone == arg["phone"]).all()
+                phone_code = db.session.query(Code).filter(Code.phone == arg["phone"]).first()
+                if phone_code is None or phone_code.code is None:
+                    return jsonify(create_simple_response("failed", "还未获取验证码", 400))
                 if len(res) != 0:
                     return jsonify(create_simple_response("failed", "该手机号已注册", 400))
-                elif session[arg["phone"]] != arg["code"]:
+                elif phone_code.code != arg["code"]:
                     return jsonify(create_simple_response("failed", "验证码错误", 400))
                 else:
                     user = User(
@@ -158,8 +171,8 @@ def register_user():
                     )
                     user.set_password(arg["password"])
                     db.session.add(user)
+                    phone_code.code = None
                     db.session.commit()
-                    session.pop(arg["phone"], None)  # 注册成功后清除验证码
                     return jsonify(create_simple_response("success", "注册用户成功"))
         else:
             return jsonify(create_simple_response("failed", "手机号，密码，用户名，验证码其中有空值", 400))
@@ -187,12 +200,16 @@ def forget_password():
         if 10 > len(password) or len(password) > 16:
             return jsonify(create_simple_response("failed", "密码长度必须要为10~16位", 400))
 
-        if session[phone] == code:
+        phone_code = db.session.query(Code).filter(Code.phone == phone).first()
+        if phone_code is None:
+            return jsonify(create_simple_response("failed", "未获取验证码", 400))
+
+        if phone_code.code == code:
             users = db.session.query(User).filter(User.phone == phone).all()
             if len(users) != 0:
                 users[0].set_password(password)
+                phone_code.code = None
                 db.session.commit()
-                session.pop(phone, None)
                 return jsonify(create_simple_response("ok", "密码修改成功"))
             else:
                 return jsonify(create_simple_response("failed", "没有对应的手机账号信息，请重新输入", 400))
@@ -598,3 +615,8 @@ def delete_note(note_id):
         return jsonify(create_simple_response("error", str(e), 500))
 
 
+@app.route("/testSession", methods=["POST"])
+def get_session():
+    phone = request.json["phone"]
+    print(session[phone])
+    return ""

@@ -142,11 +142,12 @@ class Note(db.Model):
         }
 
 
-class Like(db.Model):   # 所有用户点赞表
+class Like(db.Model):  # 所有用户点赞表
     __tablename__ = "like"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey('dongtai.id'), nullable=False)
+
     # dongtai = db.relationship('DongTai', backref='like')  # 链接动态
 
     def to_dict(self):
@@ -154,6 +155,20 @@ class Like(db.Model):   # 所有用户点赞表
             'id': self.id,
             'user_id': self.user_id,
             'article_id': self.article_id
+        }
+
+
+class Code(db.Model):
+    __tablename__ = "code"
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(40), nullable=False, unique=True)  # 账号,唯一，用手机号登录
+    code = db.Column(db.String(4))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'phone': self.phone,
+            'code': self.code
         }
 
 
