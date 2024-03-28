@@ -30,9 +30,9 @@ with app.app_context():
         legendStory="传说中紫罗兰花是“爱情花”，据希腊神话传说故事，管理人们爱与美丽的女神维纳斯，因恋人出远门，依依不舍，晶莹剔透的泪水滴到土壤上，第二年春季居然生出枝芽，结出了一朵朵美丽的花朵来，这就是紫罗兰。"
     )
 
-    baike1.add_image("http://127.0.0.1:5000/image/574806dfcd427.jpg")
-    baike1.add_image("http://127.0.0.1:5000/image/yuanwei.jpg")
-    baike1.add_image("http://127.0.0.1:5000/image/yuanwei2.jpg")
+    baike1.add_image("https://www.huabaike.com/uploads/huatuku/20160527/574806dfcd427.jpg")
+    baike1.add_image("https://tse4-mm.cn.bing.net/th/id/OIP-C.yqSwGmP4sC2VzgwYCmosvQHaFC?pid=ImgDet&w=474&h=322&rs=1")
+    baike1.add_image("https://tse4-mm.cn.bing.net/th/id/OIP-C.BA-XWKKe54IeX-74eTfBtwHaFM?pid=ImgDet&w=474&h=332&rs=1")
 
     baike2 = Baike(
         plant_name="郁金香",
