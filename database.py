@@ -106,7 +106,7 @@ class DongTai(db.Model):
             'like_num': self.like_num,
             'article_text': self.article_text,
             'imageList': self.get_images(),
-            'comments': [comment.to_dict() for comment in self.comments]
+            'comments': [comment.to_dict() for comment in self.comments],
         }
 
 

@@ -30,9 +30,9 @@ with app.app_context():
         legendStory="传说中紫罗兰花是“爱情花”，据希腊神话传说故事，管理人们爱与美丽的女神维纳斯，因恋人出远门，依依不舍，晶莹剔透的泪水滴到土壤上，第二年春季居然生出枝芽，结出了一朵朵美丽的花朵来，这就是紫罗兰。"
     )
 
-    baike1.add_image("https://www.huabaike.com/uploads/huatuku/20160527/574806dfcd427.jpg")
-    baike1.add_image("https://tse4-mm.cn.bing.net/th/id/OIP-C.yqSwGmP4sC2VzgwYCmosvQHaFC?pid=ImgDet&w=474&h=322&rs=1")
-    baike1.add_image("https://tse4-mm.cn.bing.net/th/id/OIP-C.BA-XWKKe54IeX-74eTfBtwHaFM?pid=ImgDet&w=474&h=332&rs=1")
+    baike1.add_image("http://127.0.0.1:5000/image/574806dfcd427.jpg")
+    baike1.add_image("http://127.0.0.1:5000/image/yuanwei.jpg")
+    baike1.add_image("http://127.0.0.1:5000/image/yuanwei2.jpg")
 
     baike2 = Baike(
         plant_name="郁金香",
@@ -55,9 +55,7 @@ with app.app_context():
                     "花神深感爱情不能勉强，便将皇冠变为鲜花，宝剑变成绿叶，金子变成茎根，这样合起来便成了一朵郁金香。"
     )
 
-    baike2.add_image("https://bkimg.cdn.bcebos.com/pic/37d3d539b6003af33a87e2c30d7dd15c103853431843?x-bce-process"
-                     "=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,"
-                     "limit_1,h_1080")
+    baike2.add_image("https://bkimg.cdn.bcebos.com/pic/37d3d539b6003af33a87e2c30d7dd15c103853431843?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080")
     baike2.add_image("https://bkimg.cdn.bcebos.com/pic/359b033b5bb5c9ea15ce3040ed6ea1003af33a871543?x-bce-process"
                      "=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,"
                      "limit_1,h_1080")
