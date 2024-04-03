@@ -20,6 +20,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(128), nullable=False)  # 密码
     username = db.Column(db.String(40), nullable=False)  # 用户名称
     avatar = db.Column(db.String(255), default="/image/default_avatar.png")  # 用户头像
+
     # notes = db.relationship('Note', backref='user')
     # dongtai = db.relationship('DongTai', backref='user')
 
@@ -89,6 +90,7 @@ class DongTai(db.Model):
     imageList = db.Column(db.Text)  # 用于存储json字符串
     comments = db.relationship('Comment', backref='dongtai')  # 链接评论
     user = db.relationship('User', backref='dongtai')
+    like = db.relationship('Like', backref="dongtai")
 
     def add_image(self, image_url):
         if not self.imageList:
@@ -108,7 +110,8 @@ class DongTai(db.Model):
             'article_text': self.article_text,
             'imageList': self.get_images(),
             'comments': [comment.to_dict() for comment in self.comments],
-            'user': self.user.to_dict()
+            'user': self.user.to_dict(),
+            'like': [like.to_dict() for like in self.like]
         }
 
 
@@ -118,13 +121,15 @@ class Comment(db.Model):
     article_id = db.Column(db.Integer, db.ForeignKey('dongtai.id'), nullable=False)
     comment_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     comment_text = db.Column(db.Text)
+    user = db.relationship('User', backref='comment')  # 链接用户
 
     def to_dict(self):
         return {
             'id': self.id,
             'article_id': self.article_id,
             'comment_user_id': self.comment_user_id,
-            'comment_text': self.comment_text
+            'comment_text': self.comment_text,
+            'user': self.user.to_dict()
         }
 
 
@@ -149,8 +154,6 @@ class Like(db.Model):  # 所有用户点赞表
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey('dongtai.id'), nullable=False)
-
-    # dongtai = db.relationship('DongTai', backref='like')  # 链接动态
 
     def to_dict(self):
         return {

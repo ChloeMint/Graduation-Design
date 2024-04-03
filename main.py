@@ -396,7 +396,8 @@ def get_all_dongtai():
     try:
         page = request.args.get("page", 1)  # 获取page页的数据，默认为第一页
         size = request.args.get("size", 10)  # 获取每页数据的数量，默认为10条
-        pagination = DongTai.query.paginate(page=int(page), per_page=int(size), error_out=False)
+        # pagination = DongTai.query.paginate(page=int(page), per_page=int(size), error_out=False)
+        pagination = DongTai.query.order_by(DongTai.publish_time.desc()).paginate(page=int(page), per_page=int(size), error_out=False)  # 动态降序分页
         dongtais = pagination.items
         data = [dongtai.to_dict() for dongtai in dongtais]
         # data.sort(DongTai.publish_time)
@@ -430,7 +431,7 @@ def delete_dongtai(dongtai_id):
             return jsonify(create_simple_response("failed", "该动态不存在", 400))
 
         if dongtai.user_id != current_user_id:
-            return jsonify(create_simple_response("failed", "您无权删除该条评论,只有发布用户可以删除", 400))
+            return jsonify(create_simple_response("failed", "您无权删除该条动态,只有发布用户可以删除", 400))
         else:
             db.session.query(DongTai).filter(DongTai.id == dongtai_id).delete()
             db.session.commit()
@@ -484,14 +485,14 @@ def like(dongtai_id):
                 article_id=dongtai_id
             )
             db.session.add(like)
-            dongtai.like_num += 1
+            # dongtai.like_num += 1
             db.session.commit()
             return jsonify(create_simple_response("success", "点赞成功"))
         else:
             Like.query.filter(Like.article_id == dongtai_id).delete()
-            dongtai.like_num -= 1
+            # dongtai.like_num -= 1
             db.session.commit()
-            return jsonify(create_simple_response("failed", "取消点赞成功", 400))
+            return jsonify(create_simple_response("success", "取消点赞成功", 200))
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))
 

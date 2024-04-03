@@ -231,10 +231,32 @@ with app.app_context():
                        "/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,"
                        "h_1080")
 
+    dongtai2 = DongTai(
+        user_id=1,
+        like_num=90,
+        article_text="article2"
+    )
+
+    dongtai1.add_image("https://bkimg.cdn.bcebos.com/pic/8435e5dde71190ef661cdd2cce1b9d16fcfa6059?x-bce-process=image"
+                       "/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,"
+                       "h_1080")
+    dongtai1.add_image("https://bkimg.cdn.bcebos.com/pic/8435e5dde71190ef661cdd2cce1b9d16fcfa6059?x-bce-process=image"
+                       "/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,"
+                       "h_1080")
+    dongtai1.add_image("https://bkimg.cdn.bcebos.com/pic/8435e5dde71190ef661cdd2cce1b9d16fcfa6059?x-bce-process=image"
+                       "/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,"
+                       "h_1080")
+
     comment1 = Comment(
         article_id=1,
         comment_user_id=1,
         comment_text="comment1"
+    )
+
+    comment2 = Comment(
+        article_id=1,
+        comment_user_id=1,
+        comment_text="comment2"
     )
 
     note1 = Note(
@@ -244,5 +266,5 @@ with app.app_context():
     )
 
     if __name__ == "__main__":
-        db.session.add_all([dongtai1, comment1, note1])
+        db.session.add_all([dongtai1, comment1, note1, dongtai2, comment2])
         db.session.commit()
