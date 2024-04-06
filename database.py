@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, jsonify, json
 from sqlalchemy import DateTime
 from werkzeug.security import generate_password_hash, check_password_hash
+import pytz     # 这个库是将默认的UTC时间转换成ISO 8601格式
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + 'test.db'
