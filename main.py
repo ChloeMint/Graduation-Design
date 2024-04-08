@@ -499,7 +499,7 @@ def like(dongtai_id):
         if dongtai is None:
             return jsonify(create_simple_response("failed", "该动态不存在", 400))
         current_user_id = get_jwt_identity()
-        li = Like.query.filter(Like.user_id == current_user_id).first()
+        li = Like.query.filter(Like.user_id == current_user_id).filter(Like.article_id == dongtai_id).first()
         if li is None:
             like = Like(
                 user_id=current_user_id,
@@ -510,7 +510,7 @@ def like(dongtai_id):
             db.session.commit()
             return jsonify(create_simple_response("success", "点赞成功"))
         else:
-            Like.query.filter(Like.user_id == current_user_id).delete()
+            Like.query.filter(Like.user_id == current_user_id).filter(Like.article_id == dongtai_id).delete()
             # dongtai.like_num -= 1
             db.session.commit()
             return jsonify(create_simple_response("success", "取消点赞成功", 200))
