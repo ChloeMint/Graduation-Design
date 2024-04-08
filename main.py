@@ -465,27 +465,31 @@ def publish_dongtai():
             for file in files:
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                dongtai.add_image(os.path.join("/image", filename))
+                # dongtai.add_image(os.path.join("/image", filename))
+                dongtai.add_image("/image/"+filename)
         elif 'text' in request.form and 'files' not in request.files and 'video' not in request.files:
             dongtai.article_text = request.form.get("text")
         elif 'text' not in request.form and 'files' not in request.files and 'video' in request.files:
             file = request.files.get('video')
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_VIDEO'], filename))
-            dongtai.add_video(os.path.join("/videos", filename))
+            # dongtai.add_video(os.path.join("/videos", filename))
+            dongtai.add_video("/videos/"+filename)
         elif 'text' in request.form and 'video' in request.files and 'files' not in request.files:
             dongtai.article_text = request.form.get("text")
             file = request.files.get('video')
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_VIDEO'], filename))
-            dongtai.add_video(os.path.join("/videos", filename))
+            # dongtai.add_video(os.path.join("/videos", filename))
+            dongtai.add_video("/videos/"+filename)
         else:
             dongtai.article_text = request.form.get("text")
             files = request.files.getlist("files")
             for file in files:
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                dongtai.add_image(os.path.join("/image", filename))
+                # dongtai.add_image(os.path.join("/image", filename))
+                dongtai.add_image("/image/"+filename)
         db.session.add(dongtai)
         db.session.commit()
         return jsonify(create_simple_response("success", "上传文件成功"))
