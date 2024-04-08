@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, jsonify, json
 from sqlalchemy import DateTime
 from werkzeug.security import generate_password_hash, check_password_hash
-import pytz     # 这个库是将默认的UTC时间转换成ISO 8601格式
+import pytz  # 这个库是将默认的UTC时间转换成ISO 8601格式
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + 'test.db'
@@ -89,6 +89,7 @@ class DongTai(db.Model):
     like_num = db.Column(db.Integer, nullable=False, default=0)  # 点赞数
     article_text = db.Column(db.Text)  # 文章内容
     imageList = db.Column(db.Text)  # 用于存储json字符串
+    videoUrl = db.Column(db.Text)  # 用于存储视频
     comments = db.relationship('Comment', backref='dongtai')  # 链接评论
     user = db.relationship('User', backref='dongtai')
     like = db.relationship('Like', backref="dongtai")
@@ -102,6 +103,12 @@ class DongTai(db.Model):
     def get_images(self):
         return json.loads(self.imageList) if self.imageList else []
 
+    def add_video(self, video_url):
+        self.videoUrl = video_url
+
+    def get_video_url(self):
+        return self.videoUrl
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -110,6 +117,7 @@ class DongTai(db.Model):
             'like_num': self.like_num,
             'article_text': self.article_text,
             'imageList': self.get_images(),
+            'videoUrl': self.get_video_url(),
             'comments': [comment.to_dict() for comment in self.comments],
             'user': self.user.to_dict(),
             'like': [like.to_dict() for like in self.like]

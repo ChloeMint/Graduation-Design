@@ -18,6 +18,7 @@ jwt = JWTManager(app)
 # sdk = SmsSDK("ACCOUNT SID","AUTHTOKEN","APPID")
 sdk = SmsSDK("2c94811c8cd4da0a018df3b5eebe2aad", "e076a8ae3883418185c930633e80efc2", "2c94811c8cd4da0a018df3b5f0412ab4")
 app.config['UPLOAD_FOLDER'] = 'image'  # 配置上传文件的文件夹,只有这样的相对路径可以识别
+app.config['UPLOAD_VIDEO'] = 'videos'
 
 # 确保上传文件夹存在
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -103,6 +104,11 @@ def get_all_user():
 @app.route("/image/<path:avatar_file>")  # 查看图片的接口
 def get_avatar(avatar_file):
     return send_from_directory("image", avatar_file)
+
+
+@app.route("/videos/<path:video_file>")
+def get_video_url(video_file):
+    return send_from_directory("videos", video_file)
 
 
 @app.route("/login", methods=["POST"])  # 登录接口，返回token
@@ -397,7 +403,8 @@ def get_all_dongtai():
         page = request.args.get("page", 1)  # 获取page页的数据，默认为第一页
         size = request.args.get("size", 10)  # 获取每页数据的数量，默认为10条
         # pagination = DongTai.query.paginate(page=int(page), per_page=int(size), error_out=False)
-        pagination = DongTai.query.order_by(DongTai.publish_time.desc()).paginate(page=int(page), per_page=int(size), error_out=False)  # 动态降序分页
+        pagination = DongTai.query.order_by(DongTai.publish_time.desc()).paginate(page=int(page), per_page=int(size),
+                                                                                  error_out=False)  # 动态降序分页
         dongtais = pagination.items
         data = [dongtai.to_dict() for dongtai in dongtais]
         # data.sort(DongTai.publish_time)
@@ -443,21 +450,35 @@ def delete_dongtai(dongtai_id):
 @app.route("/dongtai/publish", methods=["POST"])  # 发布动态
 @jwt_required()
 def publish_dongtai():
-    if 'text' not in request.form and 'files' not in request.files:  # 判断文字和图片都不存在这种情况
+    if 'text' not in request.form and 'files' not in request.files and 'video' not in request.files:
+        # 判断文字和图片视频都不存在这种情况
         return jsonify(create_simple_response("failed", "您没有输入任何数据", 400))
+    if 'files' in request.files and 'video' in request.files:
+        return jsonify(create_simple_response("您只能上传视频或者图片的其中一种", 400))
     else:
         current_user_id = get_jwt_identity()
         dongtai = DongTai(
             user_id=current_user_id
         )
-        if 'text' not in request.form:
+        if 'text' not in request.form and 'video' not in request.files:
             files = request.files.getlist("files")  # 获取请求提交参数都为files参数key的文件，并将其转成列表
             for file in files:
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 dongtai.add_image(os.path.join("/image", filename))
-        elif 'text' in request.form and 'files' not in request.files:
+        elif 'text' in request.form and 'files' not in request.files and 'video' not in request.files:
             dongtai.article_text = request.form.get("text")
+        elif 'text' not in request.form and 'files' not in request.files and 'video' in request.files:
+            file = request.files.get('video')
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_VIDEO'], filename))
+            dongtai.add_video(os.path.join("/videos", filename))
+        elif 'text' in request.form and 'video' in request.files and 'files' not in request.files:
+            dongtai.article_text = request.form.get("text")
+            file = request.files.get('video')
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_VIDEO'], filename))
+            dongtai.add_video(os.path.join("/videos", filename))
         else:
             dongtai.article_text = request.form.get("text")
             files = request.files.getlist("files")
