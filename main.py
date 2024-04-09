@@ -492,7 +492,7 @@ def publish_dongtai():
                 dongtai.add_image("/image/"+filename)
         db.session.add(dongtai)
         db.session.commit()
-        return jsonify(create_simple_response("success", "上传文件成功"))
+        return jsonify(create_simple_response("success", "发布动态成功"))
 
 
 @app.route("/dongtai/like/<int:dongtai_id>")  # 点赞和取消点赞,动态的喜欢数量也随之会变化
