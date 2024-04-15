@@ -21,6 +21,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(128), nullable=False)  # 密码
     username = db.Column(db.String(40), nullable=False)  # 用户名称
     avatar = db.Column(db.String(255), default="/image/default_avatar.png")  # 用户头像
+    introduction = db.Column(db.String(20), default="无")  # 用户简介
 
     # notes = db.relationship('Note', backref='user')
     # dongtai = db.relationship('DongTai', backref='user')
