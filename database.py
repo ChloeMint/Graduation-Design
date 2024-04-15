@@ -40,6 +40,7 @@ class User(db.Model):
             'phone': self.phone,
             'username': self.username,
             'avatar': self.avatar,
+            'introduction': self.introduction
             # 'notes': [note.to_dict() for note in self.notes],
             # 'dongtai': [dongtai.to_dict() for dongtai in self.dongtai]
         }
