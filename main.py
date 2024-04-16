@@ -106,9 +106,19 @@ def get_avatar(avatar_file):
     return send_from_directory("image", avatar_file)
 
 
+@app.route("/image/<path:user_id>/<path:avatar_file>")  # 优化后查看图片的接口
+def get_user_avatar(user_id, avatar_file):
+    return send_from_directory("image/" + user_id + "/", avatar_file)
+
+
 @app.route("/videos/<path:video_file>")
 def get_video_url(video_file):
     return send_from_directory("videos", video_file)
+
+
+@app.route("/videos/<path:user_id>/<path:video_file>")  # 优化后查看图片的接口
+def get_user_video_url(user_id, video_file):
+    return send_from_directory("videos/" + user_id + "/", video_file)
 
 
 @app.route("/login", methods=["POST"])  # 登录接口，返回token
@@ -349,7 +359,7 @@ def change_avatar():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/user/changeIntroduce", methods=["PUT","POST"])
+@app.route("/user/changeIntroduce", methods=["PUT", "POST"])
 @jwt_required()
 def change_introduction():
     if "introduce" not in request.json:
