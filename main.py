@@ -24,6 +24,9 @@ app.config['UPLOAD_VIDEO'] = 'videos'
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
+if not os.path.exists(app.config['UPLOAD_VIDEO']):
+    os.makedirs(app.config['UPLOAD_VIDEO'])
+
 
 def create_list_response(status, msg, code=200, data=[]):  # 封装响应信息
     response = {
@@ -189,6 +192,13 @@ def register_user():
                     db.session.add(user)
                     phone_code.code = None
                     db.session.commit()
+                    print(user.id)
+                    if not os.path.exists(app.config['UPLOAD_FOLDER']+"/"+str(user.id)):
+                        os.makedirs(app.config['UPLOAD_FOLDER']+"/"+str(user.id))
+
+                    if not os.path.exists(app.config['UPLOAD_VIDEO']+"/"+str(user.id)):
+                        os.makedirs(app.config['UPLOAD_VIDEO']+"/"+str(user.id))
+
                     return jsonify(create_simple_response("success", "注册用户成功"))
         else:
             return jsonify(create_simple_response("failed", "手机号，密码，用户名，验证码其中有空值", 400))
