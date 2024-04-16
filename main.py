@@ -351,8 +351,8 @@ def change_avatar():
             user = db.session.query(User).filter(User.id == user_id).first()
 
             # 保存文件到UPLOAD_FOLDER指定的文件夹
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], user.username + "." + end_type))
-            user.avatar = os.path.join('/image', user.username + "." + end_type)  # 这行代码实际上是为了改变刚注册时的默认头像
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/", "avatar." + end_type))
+            user.avatar = '/image/' + str(user_id) + "/avatar." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
             db.session.commit()
             return jsonify(create_simple_response("success", "上传成功"))
     except Exception as e:
@@ -491,32 +491,32 @@ def publish_dongtai():
             files = request.files.getlist("files")  # 获取请求提交参数都为files参数key的文件，并将其转成列表
             for file in files:
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(current_user_id), filename))
                 # dongtai.add_image(os.path.join("/image", filename))
-                dongtai.add_image("/image/" + filename)
+                dongtai.add_image("/image/" + str(current_user_id) + "/" + filename)
         elif 'text' in request.form and 'files' not in request.files and 'video' not in request.files:
             dongtai.article_text = request.form.get("text")
         elif 'text' not in request.form and 'files' not in request.files and 'video' in request.files:
             file = request.files.get('video')
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_VIDEO'], filename))
+            file.save(os.path.join(app.config['UPLOAD_VIDEO'] + "/" + str(current_user_id), filename))
             # dongtai.add_video(os.path.join("/videos", filename))
-            dongtai.add_video("/videos/" + filename)
+            dongtai.add_video("/videos/" + str(current_user_id) + "/" + filename)
         elif 'text' in request.form and 'video' in request.files and 'files' not in request.files:
             dongtai.article_text = request.form.get("text")
             file = request.files.get('video')
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_VIDEO'], filename))
+            file.save(os.path.join(app.config['UPLOAD_VIDEO'] + "/" + str(current_user_id), filename))
             # dongtai.add_video(os.path.join("/videos", filename))
-            dongtai.add_video("/videos/" + filename)
+            dongtai.add_video("/videos/" + str(current_user_id) + "/" + filename)
         else:
             dongtai.article_text = request.form.get("text")
             files = request.files.getlist("files")
             for file in files:
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(current_user_id), filename))
                 # dongtai.add_image(os.path.join("/image", filename))
-                dongtai.add_image("/image/" + filename)
+                dongtai.add_image("/image/" + str(current_user_id) + "/" + filename)
         db.session.add(dongtai)
         db.session.commit()
         return jsonify(create_simple_response("success", "发布动态成功"))
