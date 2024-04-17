@@ -193,11 +193,11 @@ def register_user():
                     phone_code.code = None
                     db.session.commit()
                     print(user.id)
-                    if not os.path.exists(app.config['UPLOAD_FOLDER']+"/"+str(user.id)):
-                        os.makedirs(app.config['UPLOAD_FOLDER']+"/"+str(user.id))
+                    if not os.path.exists(app.config['UPLOAD_FOLDER'] + "/" + str(user.id)):
+                        os.makedirs(app.config['UPLOAD_FOLDER'] + "/" + str(user.id))
 
-                    if not os.path.exists(app.config['UPLOAD_VIDEO']+"/"+str(user.id)):
-                        os.makedirs(app.config['UPLOAD_VIDEO']+"/"+str(user.id))
+                    if not os.path.exists(app.config['UPLOAD_VIDEO'] + "/" + str(user.id)):
+                        os.makedirs(app.config['UPLOAD_VIDEO'] + "/" + str(user.id))
 
                     return jsonify(create_simple_response("success", "注册用户成功"))
         else:
@@ -442,6 +442,26 @@ def get_all_dongtai():
         # pagination = DongTai.query.paginate(page=int(page), per_page=int(size), error_out=False)
         pagination = DongTai.query.order_by(DongTai.publish_time.desc()).paginate(page=int(page), per_page=int(size),
                                                                                   error_out=False)  # 动态降序分页
+        dongtais = pagination.items
+        data = [dongtai.to_dict() for dongtai in dongtais]
+        # data.sort(DongTai.publish_time)
+        res = create_list_response("success", "获取动态列表成功", data=data)
+        res["pagination"] = get_pagination_info(pagination.page, pagination.pages, pagination.total,
+                                                pagination.per_page)
+        return jsonify(res)
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/dongtai/<int:user_id>")
+def get_user_published_dongtai(user_id):
+    try:
+        page = request.args.get("page", 1)  # 获取page页的数据，默认为第一页
+        size = request.args.get("size", 10)  # 获取每页数据的数量，默认为10条
+        # pagination = DongTai.query.paginate(page=int(page), per_page=int(size), error_out=False)
+        pagination = DongTai.query.filter(DongTai.user_id == user_id).order_by(DongTai.publish_time.desc()).paginate(
+            page=int(page), per_page=int(size),
+            error_out=False)  # 动态降序分页
         dongtais = pagination.items
         data = [dongtai.to_dict() for dongtai in dongtais]
         # data.sort(DongTai.publish_time)
