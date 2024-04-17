@@ -369,6 +369,36 @@ def change_avatar():
         return jsonify(create_simple_response("error", str(e), 500))
 
 
+@app.route("/user/changeBackground", methods=["POST", "PUT"])  # 上传并修改用户动态背景
+@jwt_required()
+def change_dongtai_background():
+    try:
+        # # 检查是否有文件在请求中
+        if 'file' not in request.files:
+            return jsonify(create_simple_response("failed", "no file part", 400))
+        file = request.files['file']
+        # 如果用户没有选择文件，浏览器也提交了一个空文件部分
+        if file.filename == '':
+            return jsonify(create_simple_response("failed", "您没有选择图片", 400))
+
+        if file:
+            # 使用secure_filename确保文件名安全
+            # filename = secure_filename(file.filename)
+            end_type = file.filename.split(".")[-1]
+
+            # 更新数据库中的背景路径
+            user_id = get_jwt_identity()
+            user = db.session.query(User).filter(User.id == user_id).first()
+
+            # 保存文件到UPLOAD_FOLDER指定的文件夹
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/", "background." + end_type))
+            user.background = '/image/' + str(user_id) + "/background." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
+            db.session.commit()
+            return jsonify(create_simple_response("success", "上传成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
 @app.route("/user/changeIntroduce", methods=["PUT", "POST"])
 @jwt_required()
 def change_introduction():
