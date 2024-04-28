@@ -361,8 +361,9 @@ def change_avatar():
             user = db.session.query(User).filter(User.id == user_id).first()
 
             # 保存文件到UPLOAD_FOLDER指定的文件夹
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/", "avatar." + end_type))
-            user.avatar = '/image/' + str(user_id) + "/avatar." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
+            version = datetime.now().strftime("%Y%m%d%H%M%S")
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/", "avatar" + version + "." + end_type))
+            user.avatar = '/image/' + str(user_id) + "/avatar" + version + "." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
             db.session.commit()
             return jsonify(create_simple_response("success", "上传成功"))
     except Exception as e:
