@@ -275,8 +275,12 @@ def change_phone_number():
             return jsonify(create_simple_response("failed", "手机号或验证码为空", 400))
         if len(phone) != 11:
             return jsonify(create_simple_response("failed", "手机号必须为11位数字", 400))
-        if session[phone] != code:
-            return jsonify(create_simple_response("failed", "验证码错误", 400))
+        phoneCode = db.session.query(Code).filter(Code.phone == phone).all()
+        if len(phoneCode) == 0:
+            return jsonify(create_simple_response("failed", "该手机号还未获取验证码", 400))
+        else:
+            if phoneCode[0].code != code:
+                return jsonify(create_simple_response("failed", "验证码错误", 400))
 
         current_user_id = get_jwt_identity()
         user = db.session.query(User).filter(User.id == current_user_id).first()
