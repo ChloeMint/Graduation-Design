@@ -9,6 +9,8 @@ from flask import send_from_directory, request, session
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename  # 上传文件需要的库
 from flask_sqlalchemy import pagination
+import pandas as pd
+from fuzzywuzzy import process
 import os
 
 app.config['JWT_SECRET_KEY'] = 'your-secret-key'  # 配置jwt加密密钥
@@ -366,7 +368,8 @@ def change_avatar():
 
             # 保存文件到UPLOAD_FOLDER指定的文件夹
             version = datetime.now().strftime("%Y%m%d%H%M%S")
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/", "avatar" + version + "." + end_type))
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/",
+                                   "avatar" + version + "." + end_type))
             user.avatar = '/image/' + str(user_id) + "/avatar" + version + "." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
             db.session.commit()
             return jsonify(create_simple_response("success", "上传成功"))
@@ -397,8 +400,10 @@ def change_dongtai_background():
 
             # 保存文件到UPLOAD_FOLDER指定的文件夹
             version = datetime.now().strftime("%Y%m%d%H%M%S")
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/", "background" + version + "." + end_type))
-            user.background = '/image/' + str(user_id) + "/background" + version + "." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'] + "/" + str(user_id) + "/",
+                                   "background" + version + "." + end_type))
+            user.background = '/image/' + str(
+                user_id) + "/background" + version + "." + end_type  # 这行代码实际上是为了改变刚注册时的默认头像
             db.session.commit()
             return jsonify(create_simple_response("success", "上传成功"))
     except Exception as e:
@@ -734,8 +739,37 @@ def delete_note(note_id):
         return jsonify(create_simple_response("error", str(e), 500))
 
 
-@app.route("/testSession", methods=["POST"])
-def get_session():
-    phone = request.json["phone"]
-    print(session[phone])
-    return ""
+# @app.route("/testSession", methods=["POST"])
+# def get_session():
+#     phone = request.json["phone"]
+#     print(session[phone])
+#     return ""
+def get_similar(text, lists):
+    best_match = process.extractOne(text, lists)
+    return best_match
+
+
+@app.route("/docker", methods=["GET"])
+@jwt_required()
+def query_docker():
+    try:
+        question = request.args.get("question", "")
+        if "question" not in request.args:
+            return jsonify(create_simple_response("failed", "缺少问题文本参数, 400"))
+        if question == "":
+            return jsonify(create_simple_response("failed", "您未输入问题"))
+
+        df = pd.read_csv('plant_problems.csv', encoding="gbk")
+        symptomList = df['symptoms'].tolist()
+        treatmentList = df['treatment'].tolist()
+
+        result = get_similar(question, symptomList)
+        compared_question = result[0]
+        similar = result[1]
+        compared_question_index = symptomList.index(compared_question)
+
+        if similar == 0:
+            return jsonify(create_simple_response("success", "获取回答成功", data="您描述的特征太少，请给出更多的信息"))
+        return jsonify(create_simple_response("success", "获取回答成功", data=treatmentList[compared_question_index]))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
