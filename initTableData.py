@@ -3,7 +3,7 @@ from database import *
 with app.app_context():
     # 添加一个账号
     user = User(phone="15715815825", username="芽芽", avatar="/image/1/yaya.jpg")
-    user.set_password("123456")
+    user.set_password("12345678910")
 
     db.session.add(user)
     db.session.commit()

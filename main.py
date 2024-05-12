@@ -145,6 +145,9 @@ def login():
         if get_user_res == 0:
             return jsonify(create_simple_response("failed", "账号不存在", 400))
 
+        if users[0].is_delete == 1:
+            return jsonify(create_simple_response("failed", "该账号已注销", 400))
+
         if users[0].check_password(password):
             access_token = create_access_token(identity=users[0])  # Authorization : Bearer <Token>
             return jsonify(

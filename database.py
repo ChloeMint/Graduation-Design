@@ -23,6 +23,7 @@ class User(db.Model):
     avatar = db.Column(db.String(255), default="/image/default_avatar.png")  # 用户头像
     introduction = db.Column(db.String(20), default="无")  # 用户简介
     background = db.Column(db.String(255), default="/image/meBackground.jpg")
+    is_delete = db.Column(db.Boolean, default=False)
 
     # notes = db.relationship('Note', backref='user')
     # dongtai = db.relationship('DongTai', backref='user')
@@ -188,6 +189,13 @@ class Code(db.Model):
             'phone': self.phone,
             'code': self.code
         }
+
+
+class ApplicationBug(db.Model):
+    __tablename__ = "ApplicationBug"
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(10))
+    content = db.Column(db.Text)
 
 
 if __name__ == "__main__":
