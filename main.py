@@ -265,6 +265,13 @@ def get_personal_info():
     return jsonify(create_simple_response("ok", "获取成功", data=user.to_dict()))
 
 
+@app.route("/user/getPersonalInfo/<path:user_id>")
+@jwt_required()
+def get_user_personal_info(user_id):
+    user = db.session.query(User).filter(User.id == user_id).first()
+    return jsonify(create_simple_response("ok", "获取成功", data=user.to_dict()))
+
+
 @app.route("/user/changePhoneNumber", methods=["POST", "PUT"])  # 修改手机号
 @jwt_required()
 def change_phone_number():
@@ -781,8 +788,11 @@ def query_docker():
 @app.route("/user/cancelAccount", methods=["PUT"])
 @jwt_required()
 def cancel_account():
-    current_id = get_jwt_identity()
-    user = db.session.query(User).filter(User.id == current_id).first()
-    user.is_delete = True
-    db.session.commit()
-    return jsonify(create_simple_response("success", "注销账号成功"))
+    try:
+        current_id = get_jwt_identity()
+        user = db.session.query(User).filter(User.id == current_id).first()
+        user.is_delete = True
+        db.session.commit()
+        return jsonify(create_simple_response("success", "注销账号成功,七天内可以找回账号"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
