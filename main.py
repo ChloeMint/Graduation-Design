@@ -776,3 +776,13 @@ def query_docker():
         return jsonify(create_simple_response("success", "获取回答成功", data=treatmentList[compared_question_index]))
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/user/cancelAccount", methods=["PUT"])
+@jwt_required()
+def cancel_account():
+    current_id = get_jwt_identity()
+    user = db.session.query(User).filter(User.id == current_id).first()
+    user.is_delete = True
+    db.session.commit()
+    return jsonify(create_simple_response("success", "注销账号成功"))
