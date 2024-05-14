@@ -796,3 +796,21 @@ def cancel_account():
         return jsonify(create_simple_response("success", "注销账号成功,七天内可以找回账号"))
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/applicationBug", methods=["POST"])
+@jwt_required()
+def commit_bug():
+    try:
+        if "subject" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少类型参数", 400))
+        if "content" not in request.json:
+            return jsonify(create_simple_response("failed", "缺少文本参数", 400))
+        subject = request.json["subject"]
+        content = request.json["content"]
+        applicationBug = ApplicationBug(subject=subject, content=content)
+        db.session.add(applicationBug)
+        db.session.commit()
+        return jsonify(create_simple_response("success", "提交成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))

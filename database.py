@@ -196,6 +196,7 @@ class ApplicationBug(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subject = db.Column(db.String(10))
     content = db.Column(db.Text)
+    publish_time = db.Column(DateTime, default=datetime.utcnow())  # 发布时间
 
 
 if __name__ == "__main__":
