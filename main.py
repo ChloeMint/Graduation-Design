@@ -799,7 +799,6 @@ def cancel_account():
 
 
 @app.route("/applicationBug", methods=["POST"])
-@jwt_required()
 def commit_bug():
     try:
         if "subject" not in request.json:
@@ -812,5 +811,33 @@ def commit_bug():
         db.session.add(applicationBug)
         db.session.commit()
         return jsonify(create_simple_response("success", "提交成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+# @app.route("/applicationBug", methods=["GET"])
+# def get_application_bug_page():
+#     return render_template("index.html")
+
+@app.route("/applicationBug/delete/<int:application_id>", methods=["PUT"])
+def application_bug_delete(application_id):
+    try:
+        application = db.session.query(ApplicationBug).filter(ApplicationBug.id == application_id).first()
+        if application is None:
+            return jsonify(create_simple_response("failed", "删除失败，没有该条数据", 400))
+        else:
+            ApplicationBug.query.filter(ApplicationBug.id == application_id).delete()
+            db.session.commit()
+            return jsonify(create_simple_response("success", "删除成功"))
+    except Exception as e:
+        return jsonify(create_simple_response("error", str(e), 500))
+
+
+@app.route("/applicationBug/getBugLists")
+def get_all_application_bug():
+    try:
+        application_bug_list = db.session.query(ApplicationBug).all()
+        data = [application_bug.to_dict() for application_bug in application_bug_list]
+        return jsonify(create_list_response("success", "获取成功", data=data))
     except Exception as e:
         return jsonify(create_simple_response("error", str(e), 500))

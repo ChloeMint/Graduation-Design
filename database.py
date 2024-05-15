@@ -198,6 +198,14 @@ class ApplicationBug(db.Model):
     content = db.Column(db.Text)
     publish_time = db.Column(DateTime, default=datetime.utcnow())  # 发布时间
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'subject': self.subject,
+            'content': self.content,
+            'publish_time': self.publish_time
+        }
+
 
 if __name__ == "__main__":
     with app.app_context():
